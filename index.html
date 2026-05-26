@@ -1138,8 +1138,13 @@ function buildPage(d) {
    CHARTS
 ══════════════════════════════════════ */
 function makeChart(id, config) {
-  if (chartInst[id]) { chartInst[id].destroy(); }
-  chartInst[id] = new Chart(document.getElementById(id), config);
+  if (chartInst[id]) {
+    try { chartInst[id].destroy(); } catch(e) { console.warn('[makeChart] destroy failed:', id, e); }
+    chartInst[id] = null;
+  }
+  const el = document.getElementById(id);
+  if (!el) { console.warn('[makeChart] canvas not found:', id); return; }
+  chartInst[id] = new Chart(el, config);
 }
 
 function buildCharts(county, monthly, spots, types, yearTrend, latestYear, totV) {
@@ -1304,14 +1309,18 @@ function buildTable(county, totV) {
 ══════════════════════════════════════ */
 async function refreshData() {
   clearCache();
-  // Show inline status — do NOT show full-page overlay for refresh
   setStatus('loading', '正在從 CDN 取得最新快取資料…');
   document.getElementById('dsRefresh').disabled = true;
   try {
     const data = await loadData();
-    buildPage(data);
+    try {
+      buildPage(data);
+    } catch(buildErr) {
+      console.error('[refreshData] buildPage failed:', buildErr);
+    }
   } catch(e) {
-    setStatus('error', '⚠ 重新整理失敗，繼續使用離線資料');
+    console.error('[refreshData] loadData failed:', e);
+    setStatus('error', `⚠ 重新整理失敗：${e.message}`);
   } finally {
     document.getElementById('dsRefresh').disabled = false;
   }
