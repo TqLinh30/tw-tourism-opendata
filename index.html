@@ -943,7 +943,7 @@ const FALLBACK = {
    CACHE CONFIG
 ══════════════════════════════════════ */
 const CACHE_KEY = 'tw_tourism_v2';
-const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6h localStorage (CDN stays warm 24h)
 
 /* ══════════════════════════════════════
    CHART INSTANCES  (kept for destroy on refresh)
@@ -1007,45 +1007,66 @@ function clearCache() {
 /* ══════════════════════════════════════
    FETCH FROM NETLIFY FUNCTION
 ══════════════════════════════════════ */
-async function fetchLiveData() {
-  // Only call the function when running on Netlify (not localhost dev)
+async function fetchLiveData(bypassCdn = false) {
   const isNetlify = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
   if (!isNetlify) throw new Error('local-dev: skip fetch');
 
-  const res = await fetch('/.netlify/functions/tourism', {
-    headers: { 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  // Use AbortController for wider browser support
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+
+  try {
+    const opts = {
+      headers: { 'Accept': 'application/json' },
+      signal: ctrl.signal,
+    };
+    // bypassCdn=true only when we truly want fresh data (not on every refresh click)
+    if (bypassCdn) opts.headers['Cache-Control'] = 'no-cache';
+
+    const res = await fetch('/.netlify/functions/tourism', opts);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /* ══════════════════════════════════════
    LOAD DATA  (cache → live → fallback)
 ══════════════════════════════════════ */
 async function loadData() {
-  // 1. Try fresh cache
+  // 1. Try fresh localStorage cache
   const cached = loadCache();
   if (cached) {
     const ago = Math.round((Date.now() - new Date(cached.updatedAt).getTime()) / 60000);
-    setStatus('', `資料來源：快取（${ago} 分鐘前更新）`);
+    const agoTxt = ago < 60 ? `${ago} 分鐘前` : `${Math.round(ago/60)} 小時前`;
+    setStatus('', `✓ 快取資料（${agoTxt}更新）・資料年度：${cached.year} 年`);
     return cached;
   }
 
-  // 2. Try live fetch
-  setStatus('loading', '正在從政府開放資料平台載入最新數據…');
+  // 2. Try CDN-cached Netlify function (fast ~100ms when CDN is warm)
+  setStatus('loading', '正在載入資料…（CDN 已快取時 < 1 秒，首次約 15 秒）');
+  let dotCount = 0;
+  const dotTimer = setInterval(() => {
+    dotCount = (dotCount + 1) % 4;
+    const dots = '．'.repeat(dotCount);
+    setStatus('loading', `正在載入資料${dots}（CDN 已快取時 < 1 秒，首次約 15 秒）`);
+  }, 600);
+
   try {
     const data = await fetchLiveData();
+    clearInterval(dotTimer);
     saveCache(data);
     const dt = new Date(data.updatedAt).toLocaleString('zh-TW');
-    setStatus('', `✓ 最新資料已載入・資料年度：${data.year} 年・更新時間：${dt}`);
+    setStatus('', `✓ 最新資料已載入・資料年度：${data.year} 年・政府資料更新：${dt}`);
     return data;
   } catch (err) {
+    clearInterval(dotTimer);
     console.warn('[tourism] live fetch failed:', err.message);
   }
 
-  // 3. Fallback to embedded data
-  setStatus('error', '⚠ 無法連線，使用內嵌離線資料（2024 年）');
+  // 3. Fallback
+  setStatus('error', '⚠ 無法連線至資料來源，顯示內嵌離線資料（2024 年）');
   return FALLBACK;
 }
 
@@ -1283,10 +1304,17 @@ function buildTable(county, totV) {
 ══════════════════════════════════════ */
 async function refreshData() {
   clearCache();
-  document.getElementById('loadingOverlay').classList.remove('hidden');
-  const data = await loadData();
-  buildPage(data);
-  document.getElementById('loadingOverlay').classList.add('hidden');
+  // Show inline status — do NOT show full-page overlay for refresh
+  setStatus('loading', '正在從 CDN 取得最新快取資料…');
+  document.getElementById('dsRefresh').disabled = true;
+  try {
+    const data = await loadData();
+    buildPage(data);
+  } catch(e) {
+    setStatus('error', '⚠ 重新整理失敗，繼續使用離線資料');
+  } finally {
+    document.getElementById('dsRefresh').disabled = false;
+  }
 }
 
 /* ══════════════════════════════════════

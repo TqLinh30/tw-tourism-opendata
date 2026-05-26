@@ -17,7 +17,8 @@ const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Content-Type': 'application/json',
-  'Cache-Control': 'public, s-maxage=43200, max-age=43200', // CDN cache 12h
+  // CDN caches 24h fresh + serves stale up to 7 days while revalidating in background
+  'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
 };
 
 /* ── entry point ── */
