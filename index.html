@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>臺灣觀光數據洞察 · Taiwan Tourism Insights</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap');
+
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root{
+  --forest:   #1a4d2e;
+  --fern:     #2d6a4f;
+  --emerald:  #40916c;
+  --sage:     #74c69d;
+  --mint:     #b7e4c7;
+  --terra:    #c77b59;
+  --gold:     #c9a227;
+  --ochre:    #d4a843;
+  --earth:    #8b5e3c;
+  --cream:    #faf6ef;
+  --sand:     #f0e8d8;
+  --parchment:#e8dcc8;
+  --bark:     #4a3728;
+  --ink:      #1c2b1e;
+  --muted:    #6b7c6e;
+  --border:   rgba(45,106,79,.12);
+
+  --r-sm: 14px;
+  --r-md: 20px;
+  --r-lg: 28px;
+  --r-xl: 40px;
+
+  --shadow-sm: 0 2px 12px rgba(26,77,46,.08);
+  --shadow-md: 0 8px 32px rgba(26,77,46,.12), 0 2px 8px rgba(26,77,46,.06);
+  --shadow-lg: 0 20px 60px rgba(26,77,46,.16), 0 4px 16px rgba(26,77,46,.08);
+  --shadow-xl: 0 32px 80px rgba(26,77,46,.20), 0 8px 24px rgba(26,77,46,.10);
+
+  --glass-bg:   rgba(250,246,239,.72);
+  --glass-blur: blur(20px);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══════════════════════════════════════
+   BACKGROUND TEXTURE
+══════════════════════════════════════ */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(116,198,157,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 20%,  rgba(199,123,89,.12)  0%, transparent 55%),
+    radial-gradient(ellipse 50% 70% at 50% 100%, rgba(201,162,39,.10)  0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+.nav-wrap{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  z-index:1000;
+  width:min(900px,92vw);
+}
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--glass-bg);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(116,198,157,.25);
+  border-radius:50px;
+  padding:.75rem 1.4rem;
+  box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,.7);
+  transition:all .4s ease;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:.6rem;
+  font-weight:800;font-size:.92rem;color:var(--forest);letter-spacing:-.01em;
+}
+.nav-logo .leaf{
+  width:32px;height:32px;border-radius:12px;
+  background:linear-gradient(135deg,var(--emerald),var(--fern));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.85rem;
+  box-shadow:0 4px 12px rgba(64,145,108,.35);
+}
+.nav-links{display:flex;align-items:center;gap:.25rem;}
+.nav-links a{
+  padding:.45rem .9rem;border-radius:30px;
+  font-size:.82rem;font-weight:500;color:var(--muted);
+  text-decoration:none;
+  transition:all .3s ease;
+}
+.nav-links a:hover{background:rgba(64,145,108,.12);color:var(--forest);}
+.nav-cta{
+  padding:.5rem 1.2rem;border-radius:30px;
+  background:linear-gradient(135deg,var(--emerald),var(--fern));
+  color:#fff;font-size:.82rem;font-weight:600;
+  text-decoration:none;
+  box-shadow:0 4px 14px rgba(64,145,108,.35);
+  transition:all .4s ease;
+}
+.nav-cta:hover{
+  box-shadow:0 6px 20px rgba(64,145,108,.5);
+  transform:translateY(-1px);
+}
+.nav-burger{display:none;background:none;border:none;cursor:pointer;color:var(--forest);font-size:1.1rem;}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  padding:8rem 1.5rem 5rem;
+  overflow:hidden;
+}
+
+/* Floating leaf shapes */
+.hero-leaf{
+  position:absolute;border-radius:60% 40% 70% 30%/50% 60% 40% 50%;
+  pointer-events:none;
+}
+.hero-leaf-1{
+  width:420px;height:420px;
+  background:radial-gradient(circle,rgba(116,198,157,.22),rgba(64,145,108,.08));
+  top:-80px;left:-120px;
+  animation:floatLeaf 12s ease-in-out infinite;
+}
+.hero-leaf-2{
+  width:320px;height:280px;
+  background:radial-gradient(circle,rgba(199,123,89,.18),transparent);
+  top:10%;right:-80px;
+  animation:floatLeaf 15s ease-in-out infinite reverse;
+}
+.hero-leaf-3{
+  width:260px;height:300px;
+  background:radial-gradient(circle,rgba(201,162,39,.15),transparent);
+  bottom:5%;left:10%;
+  animation:floatLeaf 18s ease-in-out infinite 3s;
+}
+@keyframes floatLeaf{
+  0%,100%{transform:translate(0,0) rotate(0deg) scale(1);}
+  33%{transform:translate(15px,-20px) rotate(4deg) scale(1.03);}
+  66%{transform:translate(-10px,12px) rotate(-3deg) scale(.97);}
+}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(116,198,157,.15);
+  border:1px solid rgba(64,145,108,.25);
+  border-radius:30px;padding:.4rem 1rem;
+  font-size:.78rem;font-weight:600;color:var(--fern);
+  letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:1.8rem;
+  animation:fadeUp .8s ease both;
+}
+.hero-eyebrow .pulse{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--emerald);
+  box-shadow:0 0 0 0 rgba(64,145,108,.5);
+  animation:pulseRing 2s ease infinite;
+}
+@keyframes pulseRing{
+  0%{box-shadow:0 0 0 0 rgba(64,145,108,.5);}
+  70%{box-shadow:0 0 0 7px rgba(64,145,108,0);}
+  100%{box-shadow:0 0 0 0 rgba(64,145,108,0);}
+}
+
+.hero h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2.6rem,7vw,5rem);
+  line-height:1.1;
+  color:var(--forest);
+  letter-spacing:-.02em;
+  margin-bottom:1.4rem;
+  animation:fadeUp .8s ease .1s both;
+}
+.hero h1 em{
+  font-style:italic;
+  background:linear-gradient(135deg,var(--terra),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero p{
+  font-size:1.05rem;color:var(--muted);
+  max-width:520px;line-height:1.75;
+  margin:0 auto 2.4rem;
+  animation:fadeUp .8s ease .2s both;
+}
+
+.hero-actions{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .8s ease .3s both;
+}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.85rem 2rem;border-radius:50px;
+  background:linear-gradient(135deg,var(--emerald) 0%,var(--fern) 100%);
+  color:#fff;font-weight:700;font-size:.92rem;
+  text-decoration:none;
+  box-shadow:0 8px 28px rgba(64,145,108,.4),inset 0 1px 0 rgba(255,255,255,.2);
+  transition:all .4s ease;
+  border:none;cursor:pointer;
+}
+.btn-primary:hover{
+  transform:translateY(-3px);
+  box-shadow:0 14px 40px rgba(64,145,108,.5),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.85rem 1.8rem;border-radius:50px;
+  background:rgba(255,255,255,.6);
+  border:1px solid rgba(64,145,108,.25);
+  color:var(--forest);font-weight:600;font-size:.92rem;
+  text-decoration:none;
+  backdrop-filter:blur(8px);
+  transition:all .4s ease;
+  cursor:pointer;
+}
+.btn-secondary:hover{
+  background:rgba(255,255,255,.9);
+  box-shadow:var(--shadow-md);
+  transform:translateY(-2px);
+}
+
+/* Hero stats ribbon */
+.hero-stats{
+  display:flex;align-items:center;gap:2.5rem;
+  margin-top:4rem;
+  padding:1.4rem 2.5rem;
+  background:var(--glass-bg);
+  backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(116,198,157,.2);
+  border-radius:var(--r-xl);
+  box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,.8);
+  animation:fadeUp .8s ease .45s both;
+  flex-wrap:wrap;justify-content:center;
+}
+.hstat{text-align:center;}
+.hstat-val{font-size:1.6rem;font-weight:900;color:var(--forest);line-height:1;}
+.hstat-lbl{font-size:.72rem;color:var(--muted);font-weight:500;margin-top:.25rem;}
+.hstat-div{width:1px;height:36px;background:var(--border);}
+
+/* ══════════════════════════════════════
+   SECTION SHARED
+══════════════════════════════════════ */
+section{position:relative;z-index:1;}
+.container{max-width:1160px;margin:0 auto;padding:0 1.5rem;}
+.section-pad{padding:6rem 0;}
+
+.tag{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(64,145,108,.10);
+  border:1px solid rgba(64,145,108,.2);
+  border-radius:30px;padding:.35rem .9rem;
+  font-size:.72rem;font-weight:700;color:var(--fern);
+  letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:1rem;
+}
+.section-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(1.8rem,4vw,2.8rem);
+  color:var(--forest);line-height:1.2;
+  letter-spacing:-.02em;margin-bottom:.8rem;
+}
+.section-sub{
+  font-size:.95rem;color:var(--muted);
+  line-height:1.7;max-width:480px;
+}
+
+/* ══════════════════════════════════════
+   KPI CARDS
+══════════════════════════════════════ */
+.kpi-section{padding:0 0 5rem;}
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.2rem;
+}
+.kpi-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:1.8rem;
+  position:relative;overflow:hidden;
+  box-shadow:var(--shadow-sm);
+  transition:all .4s ease;
+}
+.kpi-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:3px;
+  background:var(--accent-grad,linear-gradient(90deg,var(--emerald),var(--sage)));
+  border-radius:3px 3px 0 0;
+}
+.kpi-card:nth-child(1){--accent-grad:linear-gradient(90deg,#40916c,#74c69d);}
+.kpi-card:nth-child(2){--accent-grad:linear-gradient(90deg,#c9a227,#d4a843);}
+.kpi-card:nth-child(3){--accent-grad:linear-gradient(90deg,#c77b59,#e09070);}
+.kpi-card:nth-child(4){--accent-grad:linear-gradient(90deg,#2d6a4f,#40916c);}
+.kpi-card:hover{
+  box-shadow:var(--shadow-lg);
+  transform:translateY(-4px);
+  border-color:rgba(64,145,108,.25);
+}
+.kpi-ico{
+  width:44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;margin-bottom:1.2rem;
+}
+.kpi-card:nth-child(1) .kpi-ico{background:rgba(64,145,108,.12);color:var(--emerald);}
+.kpi-card:nth-child(2) .kpi-ico{background:rgba(201,162,39,.12);color:var(--gold);}
+.kpi-card:nth-child(3) .kpi-ico{background:rgba(199,123,89,.12);color:var(--terra);}
+.kpi-card:nth-child(4) .kpi-ico{background:rgba(45,106,79,.12);color:var(--fern);}
+.kpi-lbl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;}
+.kpi-val{font-size:1.9rem;font-weight:900;color:var(--forest);line-height:1;margin-bottom:.35rem;}
+.kpi-sub{font-size:.78rem;color:var(--muted);}
+
+/* ══════════════════════════════════════
+   CHARTS SECTION
+══════════════════════════════════════ */
+.charts-section{background:var(--sand);padding:6rem 0;}
+.charts-section::before{
+  content:'';position:absolute;inset:-1px;
+  background:inherit;
+  border-radius:0;
+}
+.charts-intro{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:2rem;margin-bottom:3rem;flex-wrap:wrap;
+}
+.charts-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.4rem;
+}
+.chart-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:1.8rem;
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow .4s ease;
+}
+.chart-card:hover{box-shadow:var(--shadow-md);}
+.chart-card.span2{grid-column:1/-1;}
+.cc-head{margin-bottom:1.4rem;}
+.cc-title{
+  font-weight:700;font-size:.95rem;color:var(--forest);
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;
+}
+.cc-dot{
+  width:8px;height:8px;border-radius:50%;
+  box-shadow:0 0 0 3px rgba(64,145,108,.15);
+}
+.cc-sub{font-size:.78rem;color:var(--muted);}
+
+/* ══════════════════════════════════════
+   FEATURES / INSIGHT CARDS (3D TILT)
+══════════════════════════════════════ */
+.features-section{padding:6rem 0;}
+.features-intro{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:center;margin-bottom:4rem;
+}
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
+}
+.feat-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:2rem;
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 0 rgba(64,145,108,0);
+  transition:box-shadow .4s ease, border-color .4s ease;
+  cursor:default;
+  transform-style:preserve-3d;
+  will-change:transform;
+  transform:perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1);
+  position:relative;overflow:hidden;
+}
+.feat-card::after{
+  content:'';
+  position:absolute;inset:0;
+  border-radius:inherit;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(116,198,157,.12) 0%, transparent 60%);
+  opacity:0;
+  transition:opacity .4s ease;
+  pointer-events:none;
+}
+.feat-card:hover::after{opacity:1;}
+.feat-card:hover{
+  box-shadow:var(--shadow-xl),0 0 0 1px rgba(64,145,108,.15);
+  border-color:rgba(64,145,108,.2);
+}
+
+/* Stacked-layer depth badge */
+.feat-card .layer-badge{
+  position:absolute;top:-6px;right:20px;
+  width:40px;height:8px;
+  background:var(--sand);
+  border:1px solid var(--border);
+  border-radius:4px;
+  box-shadow:0 -3px 8px rgba(0,0,0,.05);
+}
+.feat-card .layer-badge::before{
+  content:'';position:absolute;
+  top:-5px;left:5px;right:5px;height:4px;
+  background:var(--parchment);
+  border:1px solid var(--border);
+  border-radius:3px;
+}
+
+.feat-ico{
+  width:52px;height:52px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;margin-bottom:1.4rem;
+  position:relative;
+  box-shadow:
+    4px 4px 10px rgba(0,0,0,.08),
+    -2px -2px 6px rgba(255,255,255,.9);
+}
+.feat-h{font-weight:700;font-size:1rem;color:var(--forest);margin-bottom:.6rem;}
+.feat-p{font-size:.85rem;color:var(--muted);line-height:1.65;}
+.feat-num{
+  display:inline-block;margin-top:1.2rem;
+  font-size:1.4rem;font-weight:900;color:var(--forest);line-height:1;
+}
+.feat-num-lbl{font-size:.72rem;color:var(--muted);font-weight:500;margin-top:.15rem;}
+
+/* ico color variants */
+.ico-green{background:rgba(64,145,108,.1);color:var(--emerald);box-shadow:4px 4px 10px rgba(64,145,108,.15),-2px -2px 6px rgba(255,255,255,.9);}
+.ico-gold {background:rgba(201,162,39,.1);color:var(--gold)  ;box-shadow:4px 4px 10px rgba(201,162,39,.15),-2px -2px 6px rgba(255,255,255,.9);}
+.ico-terra{background:rgba(199,123,89,.1);color:var(--terra) ;box-shadow:4px 4px 10px rgba(199,123,89,.15),-2px -2px 6px rgba(255,255,255,.9);}
+
+/* ══════════════════════════════════════
+   DATA TABLE SECTION
+══════════════════════════════════════ */
+.table-section{background:var(--sand);padding:6rem 0;}
+.table-wrap{overflow-x:auto;border-radius:var(--r-lg);box-shadow:var(--shadow-md);}
+table{width:100%;border-collapse:collapse;background:#fff;}
+thead{background:var(--forest);}
+th{
+  padding:1rem 1.2rem;text-align:left;
+  font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.7);
+}
+th:first-child{border-radius:var(--r-lg) 0 0 0;}
+th:last-child{border-radius:0 var(--r-lg) 0 0;}
+td{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);font-size:.88rem;color:var(--ink);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(116,198,157,.06);}
+.rank-pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:9px;
+  font-weight:800;font-size:.78rem;
+}
+.r1{background:linear-gradient(135deg,#c9a227,#d4a843);color:#fff;box-shadow:0 3px 10px rgba(201,162,39,.4);}
+.r2{background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#fff;}
+.r3{background:linear-gradient(135deg,#c77b59,#d48060);color:#fff;}
+.rn{background:var(--sand);color:var(--muted);}
+.bar-track{
+  display:flex;align-items:center;gap:.6rem;
+}
+.bar-fill{
+  height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--emerald),var(--sage));
+  box-shadow:0 0 8px rgba(64,145,108,.25);
+  flex-shrink:0;
+}
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+footer{
+  background:var(--forest);
+  color:rgba(255,255,255,.65);
+  padding:3rem 0 2rem;
+}
+.footer-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;
+}
+.footer-brand{
+  font-family:'DM Serif Display',serif;
+  font-size:1.1rem;color:#fff;
+  display:flex;align-items:center;gap:.6rem;
+}
+.footer-brand .leaf{
+  width:30px;height:30px;border-radius:10px;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;color:#fff;
+}
+.footer-copy{font-size:.78rem;}
+.footer-link{
+  color:rgba(255,255,255,.5);text-decoration:none;
+  transition:color .3s ease;
+}
+.footer-link:hover{color:#fff;}
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to  {opacity:1;transform:translateY(0);}
+}
+.reveal{
+  opacity:0;transform:translateY(28px);
+  transition:opacity .7s ease, transform .7s ease;
+}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  .chart-card.span2{grid-column:1;}
+  .features-intro{grid-template-columns:1fr;}
+  .features-grid{grid-template-columns:repeat(2,1fr);}
+  .nav-links,.nav-cta-wrap{display:none;}
+  .nav-burger{display:block;}
+}
+@media(max-width:580px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .features-grid{grid-template-columns:1fr;}
+  .hero-stats{gap:1.4rem;padding:1.2rem 1.5rem;}
+  .hstat-div{display:none;}
+}
+
+/* ══════════════════════════════════════
+   DATA STATUS BAR
+══════════════════════════════════════ */
+.data-status{
+  display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+  background:rgba(255,255,255,.7);
+  backdrop-filter:blur(12px);
+  border:1px solid var(--border);
+  border-radius:50px;
+  padding:.55rem 1.2rem;
+  font-size:.78rem;color:var(--muted);
+  margin-bottom:2rem;
+  max-width:fit-content;
+}
+.ds-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--emerald);
+  box-shadow:0 0 0 3px rgba(64,145,108,.2);
+  flex-shrink:0;
+}
+.ds-dot.loading{background:var(--gold);animation:blink 1s infinite;}
+.ds-dot.error  {background:var(--terra);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ds-btn{
+  display:inline-flex;align-items:center;gap:.3rem;
+  background:rgba(64,145,108,.1);border:1px solid rgba(64,145,108,.2);
+  border-radius:20px;padding:.2rem .65rem;
+  font-size:.72rem;font-weight:600;color:var(--fern);
+  cursor:pointer;transition:all .3s ease;
+}
+.ds-btn:hover{background:rgba(64,145,108,.2);}
+.ds-btn i{font-size:.65rem;}
+
+/* ══════════════════════════════════════
+   LOADING OVERLAY
+══════════════════════════════════════ */
+.loading-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--cream);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:1.2rem;
+  transition:opacity .5s ease, visibility .5s ease;
+}
+.loading-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.spinner{
+  width:48px;height:48px;border-radius:50%;
+  border:3px solid var(--mint);
+  border-top-color:var(--emerald);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay p{font-size:.88rem;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<div class="nav-wrap">
+  <nav>
+    <div class="nav-logo">
+      <div class="leaf"><i class="fa-solid fa-leaf"></i></div>
+      臺灣觀光洞察
+    </div>
+    <div class="nav-links">
+      <a href="#stats">統計數據</a>
+      <a href="#charts">圖表分析</a>
+      <a href="#insights">洞察報告</a>
+      <a href="#table">排行榜</a>
+    </div>
+    <div class="nav-cta-wrap">
+      <a href="https://data.gov.tw/dataset/8116" target="_blank" class="nav-cta">
+        <i class="fa-solid fa-database"></i> 原始資料
+      </a>
+    </div>
+    <button class="nav-burger"><i class="fa-solid fa-bars"></i></button>
+  </nav>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p>正在從政府開放資料平台載入最新數據…</p>
+</div>
+
+<div class="hero">
+  <div class="hero-leaf hero-leaf-1"></div>
+  <div class="hero-leaf hero-leaf-2"></div>
+  <div class="hero-leaf hero-leaf-3"></div>
+
+  <div class="hero-eyebrow">
+    <span class="pulse"></span>
+    政府開放資料 · 交通部觀光署 · Dataset #8116
+  </div>
+
+  <h1>臺灣觀光旅遊<br><em>數據全解析</em></h1>
+
+  <p>基於 2024 年最新官方統計，深度呈現全臺各縣市景點遊客流量、季節峰值與區域熱點，以數據洞見驅動觀光策略。</p>
+
+  <div class="hero-actions">
+    <a href="#charts" class="btn-primary">
+      <i class="fa-solid fa-chart-line"></i> 查看圖表分析
+    </a>
+    <a href="#insights" class="btn-secondary">
+      <i class="fa-solid fa-lightbulb"></i> 核心洞察
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hstat">
+      <div class="hstat-val" id="hs-total">—</div>
+      <div class="hstat-lbl" id="hs-year-lbl">全年遊客</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-val">4,126+</div>
+      <div class="hstat-lbl">原始資料筆數</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-val">22 縣市</div>
+      <div class="hstat-lbl">涵蓋範圍</div>
+    </div>
+    <div class="hstat-div"></div>
+    <div class="hstat">
+      <div class="hstat-val" id="hs-types">9 類型</div>
+      <div class="hstat-lbl">觀光據點分類</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ KPI ═══ -->
+<div id="stats">
+  <div class="container kpi-section">
+
+    <!-- Data status bar -->
+    <div class="data-status" id="dataStatus">
+      <span class="ds-dot loading" id="dsDot"></span>
+      <span id="dsText">正在載入最新數據…</span>
+      <button class="ds-btn" id="dsRefresh" onclick="refreshData()" title="重新抓取最新資料">
+        <i class="fa-solid fa-rotate"></i> 重新整理
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card reveal">
+        <div class="kpi-ico"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div class="kpi-lbl">遊客最多縣市</div>
+        <div class="kpi-val" id="kpi-county-val">—</div>
+        <div class="kpi-sub" id="kpi-county-sub">載入中…</div>
+      </div>
+      <div class="kpi-card reveal">
+        <div class="kpi-ico"><i class="fa-solid fa-star"></i></div>
+        <div class="kpi-lbl">最熱門景點</div>
+        <div class="kpi-val" id="kpi-spot-val" style="font-size:1.25rem;line-height:1.3">—</div>
+        <div class="kpi-sub" id="kpi-spot-sub">載入中…</div>
+      </div>
+      <div class="kpi-card reveal">
+        <div class="kpi-ico"><i class="fa-solid fa-calendar-days"></i></div>
+        <div class="kpi-lbl">全年旺季月份</div>
+        <div class="kpi-val" id="kpi-month-val">—</div>
+        <div class="kpi-sub" id="kpi-month-sub">載入中…</div>
+      </div>
+      <div class="kpi-card reveal">
+        <div class="kpi-ico"><i class="fa-solid fa-tree"></i></div>
+        <div class="kpi-lbl">最大類型占比</div>
+        <div class="kpi-val" id="kpi-type-val">—</div>
+        <div class="kpi-sub" id="kpi-type-sub">載入中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHARTS ═══ -->
+<section id="charts" class="charts-section">
+  <div class="container">
+    <div class="charts-intro">
+      <div>
+        <div class="tag"><i class="fa-solid fa-chart-bar"></i> 數據視覺化</div>
+        <h2 class="section-title">互動式<br>圖表分析</h2>
+      </div>
+      <p class="section-sub">hover 可查看精確數值。所有圖表均基於交通部觀光署 2024 年官方統計資料，涵蓋縣市、景點、月份與類型四個維度。</p>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card reveal">
+        <div class="cc-head">
+          <div class="cc-title">
+            <span class="cc-dot" style="background:var(--emerald)"></span>
+            各縣市遊客人數 Top 10
+          </div>
+          <div class="cc-sub">2024 年依縣市加總排行（萬人次）</div>
+        </div>
+        <canvas id="cCounty" height="300"></canvas>
+      </div>
+
+      <div class="chart-card reveal">
+        <div class="cc-head">
+          <div class="cc-title">
+            <span class="cc-dot" style="background:var(--gold)"></span>
+            各月份遊客趨勢
+          </div>
+          <div class="cc-sub">2024 全年月別波動 · 橘點為旺季高峰</div>
+        </div>
+        <canvas id="cMonth" height="300"></canvas>
+      </div>
+
+      <div class="chart-card reveal">
+        <div class="cc-head">
+          <div class="cc-title">
+            <span class="cc-dot" style="background:var(--terra)"></span>
+            熱門景點 Top 5
+          </div>
+          <div class="cc-sub">單一景點遊客人次排行（萬人次）</div>
+        </div>
+        <canvas id="cSpots" height="250"></canvas>
+      </div>
+
+      <div class="chart-card reveal">
+        <div class="cc-head">
+          <div class="cc-title">
+            <span class="cc-dot" style="background:var(--fern)"></span>
+            觀光據點類型占比
+          </div>
+          <div class="cc-sub">各類型觀光區域遊客人次分布</div>
+        </div>
+        <canvas id="cType" height="250"></canvas>
+      </div>
+
+      <div class="chart-card span2 reveal">
+        <div class="cc-head">
+          <div class="cc-title">
+            <span class="cc-dot" style="background:var(--emerald)"></span>
+            歷年全臺觀光遊客總人次趨勢參考（2012 – 2024）
+          </div>
+          <div class="cc-sub">2024 年為官方統計實際值；2012–2023 為參考估算值，趨勢走向反映觀光產業長期發展脈絡</div>
+        </div>
+        <canvas id="cYear" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ INSIGHTS / FEATURE CARDS ═══ -->
+<section id="insights" class="features-section">
+  <div class="container">
+    <div class="features-intro">
+      <div>
+        <div class="tag"><i class="fa-solid fa-magnifying-glass-chart"></i> 核心洞察</div>
+        <h2 class="section-title">三大關鍵<br>數據發現</h2>
+        <p class="section-sub" style="margin-top:.8rem">從 4,126 筆政府開放資料中萃取的決策洞察，協助觀光政策制定者精準佈局資源配置。</p>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(64,145,108,.08),rgba(199,123,89,.06));border:1px solid var(--border);border-radius:var(--r-lg);padding:2rem;">
+        <div style="font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem">政策建議摘要</div>
+        <p style="font-size:.88rem;color:var(--ink);line-height:1.75">
+          觀光資源應優先投入高人流縣市與熱門景點，如強化交通接駁與旅客服務；而遊客較少的地區可透過主題活動、社群行銷提升曝光度，達成<strong style="color:var(--forest)">區域觀光均衡發展</strong>目標。
+        </p>
+        <div style="margin-top:1.5rem;display:flex;gap:.8rem;flex-wrap:wrap;">
+          <span style="background:rgba(64,145,108,.1);border:1px solid rgba(64,145,108,.2);border-radius:20px;padding:.3rem .8rem;font-size:.75rem;color:var(--fern);font-weight:600">交通疏導</span>
+          <span style="background:rgba(201,162,39,.1);border:1px solid rgba(201,162,39,.2);border-radius:20px;padding:.3rem .8rem;font-size:.75rem;color:var(--gold);font-weight:600">旺季備援</span>
+          <span style="background:rgba(199,123,89,.1);border:1px solid rgba(199,123,89,.2);border-radius:20px;padding:.3rem .8rem;font-size:.75rem;color:var(--terra);font-weight:600">行銷資源</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-grid" id="featGrid">
+
+      <div class="feat-card reveal">
+        <div class="layer-badge"></div>
+        <div class="feat-ico ico-green"><i class="fa-solid fa-crown"></i></div>
+        <div class="feat-h">縣市觀光霸主</div>
+        <div class="feat-p">高雄市以絕對優勢領跑全臺，透過大型活動、舊城再生與積極的觀光行銷策略，成功吸引最多旅客造訪。</div>
+        <div class="feat-num" id="feat-num-1">—</div>
+        <div class="feat-num-lbl" id="feat-lbl-1">全年遊客人次</div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="layer-badge"></div>
+        <div class="feat-ico ico-gold"><i class="fa-solid fa-calendar-star"></i></div>
+        <div class="feat-h">春節旺季效應</div>
+        <div class="feat-p" id="feat-p-2">旺季月份遊客人次顯著高於淡季，春節連假是最強力的旅遊驅動力，形成全年最鮮明的雙高峰曲線。</div>
+        <div class="feat-num" id="feat-num-2">—</div>
+        <div class="feat-num-lbl" id="feat-lbl-2">旺季相對淡季增幅</div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="layer-badge"></div>
+        <div class="feat-ico ico-terra"><i class="fa-solid fa-torii-gate"></i></div>
+        <div class="feat-h">傳統文化勝出</div>
+        <div class="feat-p" id="feat-p-3">最熱門景點以歷史文化街區為主，彰顯傳統文化對現代旅客的強大吸引力。</div>
+        <div class="feat-num" id="feat-num-3">—</div>
+        <div class="feat-num-lbl" id="feat-lbl-3">最熱門景點遊客人次</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TABLE ═══ -->
+<section id="table" class="table-section">
+  <div class="container">
+    <div style="margin-bottom:2.5rem">
+      <div class="tag"><i class="fa-solid fa-table-list"></i> Top 10 數據</div>
+      <h2 class="section-title">縣市遊客 Top 10 排行表</h2>
+      <p class="section-sub">2024 年各縣市觀光遊客人次 Top 10 統計，含佔比與相對比例視覺化</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table>
+        <thead>
+          <tr>
+            <th>排名</th>
+            <th>縣市</th>
+            <th>遊客人次</th>
+            <th>佔比</th>
+            <th>相對比例</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="leaf"><i class="fa-solid fa-leaf"></i></div>
+        臺灣觀光數據洞察
+      </div>
+      <div class="footer-copy">
+        資料來源：<a href="https://data.gov.tw/dataset/8116" target="_blank" class="footer-link">政府開放資料平台 data.gov.tw · dataset #8116</a>
+        &nbsp;·&nbsp; 交通部觀光署 &nbsp;·&nbsp; 2024 年度統計
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════
+   FALLBACK DATA  (2024, from Colab analysis)
+   Used when Netlify function is unavailable.
+══════════════════════════════════════ */
+const FALLBACK = {
+  year: 2024,
+  totalVisitors: 548520948,
+  updatedAt: null,
+  county: [
+    {name:'高雄市',v:69231082},{name:'臺中市',v:66556130},
+    {name:'臺北市',v:61894820},{name:'新北市',v:61689857},
+    {name:'桃園市',v:49316442},{name:'臺南市',v:48933022},
+    {name:'彰化縣',v:44891890},{name:'嘉義市',v:26483646},
+    {name:'雲林縣',v:21960674},{name:'苗栗縣',v:15839953},
+  ],
+  monthly: [
+    {month:'1月',v:42414656},{month:'2月',v:69222662},{month:'3月',v:48335662},
+    {month:'4月',v:43722984},{month:'5月',v:42246958},{month:'6月',v:41931495},
+    {month:'7月',v:42557539},{month:'8月',v:43030666},{month:'9月',v:38136254},
+    {month:'10月',v:40956715},{month:'11月',v:44685863},{month:'12月',v:51279494},
+  ],
+  spots: [
+    {name:'鹿港老街及周邊地區',county:'彰化縣',v:17301379},
+    {name:'文化路夜市',county:'嘉義市',v:15983038},
+    {name:'安平',county:'臺南市',v:14495255},
+    {name:'台北101',county:'臺北市',v:12748808},
+    {name:'老街溪沿岸步道',county:'桃園市',v:10534707},
+  ],
+  types: [
+    {type:'其他',v:216177059},{type:'國家級風景特定區',v:152703103},
+    {type:'博物館',v:47634622},{type:'國家公園',v:46866416},
+    {type:'森林遊樂區',v:41854692},{type:'直轄市縣(市)級',v:15507783},
+    {type:'觀光地區',v:15130573},{type:'休閒農業區',v:6644208},
+    {type:'宗教場所',v:6002492},
+  ],
+  yearTrend: [
+    {year:2012,v:289e6},{year:2013,v:312e6},{year:2014,v:335e6},
+    {year:2015,v:352e6},{year:2016,v:371e6},{year:2017,v:385e6},
+    {year:2018,v:395e6},{year:2019,v:408e6},{year:2020,v:320e6},
+    {year:2021,v:295e6},{year:2022,v:410e6},{year:2023,v:510e6},
+    {year:2024,v:548520948},
+  ],
+};
+
+/* ══════════════════════════════════════
+   CACHE CONFIG
+══════════════════════════════════════ */
+const CACHE_KEY = 'tw_tourism_v2';
+const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
+
+/* ══════════════════════════════════════
+   CHART INSTANCES  (kept for destroy on refresh)
+══════════════════════════════════════ */
+const chartInst = {};
+
+/* ══════════════════════════════════════
+   CHART STYLE CONSTANTS
+══════════════════════════════════════ */
+const GREEN   = '#40916c';
+const SAGE    = '#74c69d';
+const GOLD    = '#c9a227';
+const TERRA   = '#c77b59';
+const FERN    = '#2d6a4f';
+const palette = [GREEN,GOLD,TERRA,'#52b788','#a7c957','#e9c46a','#f4a261','#e76f51','#6b4226'];
+const tip = {
+  backgroundColor:'rgba(28,43,30,.93)',
+  titleColor:'#b7e4c7', bodyColor:'#e8dcc8',
+  borderColor:'rgba(116,198,157,.2)', borderWidth:1,
+  padding:12, cornerRadius:10,
+};
+const gridLine = {color:'rgba(45,106,79,.07)'};
+const tickStyle = {color:'#6b7c6e', font:{size:11}};
+
+/* ══════════════════════════════════════
+   STATUS BAR HELPERS
+══════════════════════════════════════ */
+function setStatus(state, text) {
+  const dot  = document.getElementById('dsDot');
+  const span = document.getElementById('dsText');
+  dot.className  = 'ds-dot ' + state;   // 'loading' | '' | 'error'
+  span.textContent = text;
+}
+
+/* ══════════════════════════════════════
+   CACHE HELPERS
+══════════════════════════════════════ */
+function saveCache(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      data,
+    }));
+  } catch(_) {}
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const {ts, data} = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) return null;
+    return data;
+  } catch(_) { return null; }
+}
+
+function clearCache() {
+  try { localStorage.removeItem(CACHE_KEY); } catch(_) {}
+}
+
+/* ══════════════════════════════════════
+   FETCH FROM NETLIFY FUNCTION
+══════════════════════════════════════ */
+async function fetchLiveData() {
+  // Only call the function when running on Netlify (not localhost dev)
+  const isNetlify = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+  if (!isNetlify) throw new Error('local-dev: skip fetch');
+
+  const res = await fetch('/.netlify/functions/tourism', {
+    headers: { 'Accept': 'application/json' },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+/* ══════════════════════════════════════
+   LOAD DATA  (cache → live → fallback)
+══════════════════════════════════════ */
+async function loadData() {
+  // 1. Try fresh cache
+  const cached = loadCache();
+  if (cached) {
+    const ago = Math.round((Date.now() - new Date(cached.updatedAt).getTime()) / 60000);
+    setStatus('', `資料來源：快取（${ago} 分鐘前更新）`);
+    return cached;
+  }
+
+  // 2. Try live fetch
+  setStatus('loading', '正在從政府開放資料平台載入最新數據…');
+  try {
+    const data = await fetchLiveData();
+    saveCache(data);
+    const dt = new Date(data.updatedAt).toLocaleString('zh-TW');
+    setStatus('', `✓ 最新資料已載入・資料年度：${data.year} 年・更新時間：${dt}`);
+    return data;
+  } catch (err) {
+    console.warn('[tourism] live fetch failed:', err.message);
+  }
+
+  // 3. Fallback to embedded data
+  setStatus('error', '⚠ 無法連線，使用內嵌離線資料（2024 年）');
+  return FALLBACK;
+}
+
+/* ══════════════════════════════════════
+   RENDER PAGE
+══════════════════════════════════════ */
+function buildPage(d) {
+  const { county, monthly, spots, types, yearTrend, year, totalVisitors } = d;
+  const peakM  = monthly.reduce((p,c) => c.v > p.v ? c : p);
+  const lowM   = monthly.reduce((p,c) => c.v < p.v ? c : p);
+  const pctUp  = Math.round((peakM.v / lowM.v - 1) * 100);
+  const totV   = monthly.reduce((s,m) => s + m.v, 0);
+
+  /* ── Hero stats ── */
+  document.getElementById('hs-total').textContent    = (totalVisitors / 1e8).toFixed(2) + ' 億';
+  document.getElementById('hs-year-lbl').textContent = `${year} 年全年遊客`;
+  document.getElementById('hs-types').textContent    = types.length + ' 類型';
+
+  /* ── KPI cards ── */
+  const topCounty = county[0];
+  document.getElementById('kpi-county-val').textContent = topCounty.name;
+  document.getElementById('kpi-county-sub').textContent =
+    `${(topCounty.v/10000).toFixed(0)} 萬人次・全臺第 1`;
+
+  const topSpot = spots[0];
+  document.getElementById('kpi-spot-val').innerHTML =
+    topSpot.name.length > 8
+      ? topSpot.name.replace(/(.{4,8})/, '$1<br>')
+      : topSpot.name;
+  document.getElementById('kpi-spot-sub').textContent =
+    `${(topSpot.v/10000).toFixed(0)} 萬人次・${topSpot.county}`;
+
+  document.getElementById('kpi-month-val').textContent = peakM.month;
+  document.getElementById('kpi-month-sub').textContent =
+    `${(peakM.v/10000).toFixed(0)} 萬人次・春節效應`;
+
+  const topType = types[0];
+  document.getElementById('kpi-type-val').textContent = topType.type;
+  document.getElementById('kpi-type-sub').textContent =
+    `${(topType.v/1e8).toFixed(2)} 億人次・佔比最高`;
+
+  /* ── Feat card numbers ── */
+  document.getElementById('feat-num-1').innerHTML =
+    `${(topCounty.v/10000).toFixed(0)} <span style="font-size:.9rem">萬</span>`;
+  document.getElementById('feat-lbl-1').textContent = `${topCounty.name} ${year} 年遊客人次`;
+
+  document.getElementById('feat-num-2').innerHTML =
+    `+${pctUp}% <span style="font-size:.9rem">vs. 淡季</span>`;
+  document.getElementById('feat-lbl-2').textContent = `旺季相對淡季（${lowM.month}）增幅`;
+  document.getElementById('feat-p-2').textContent =
+    `${peakM.month} 遊客人次高達 ${(peakM.v/10000).toFixed(0)} 萬，` +
+    `春節連假是最強力的旅遊驅動力，形成全年最鮮明的多高峰曲線。`;
+
+  document.getElementById('feat-num-3').innerHTML =
+    `${(topSpot.v/10000).toFixed(0)} <span style="font-size:.9rem">萬</span>`;
+  document.getElementById('feat-lbl-3').textContent = `${topSpot.name}年度遊客人次`;
+  document.getElementById('feat-p-3').textContent =
+    `${topSpot.name}（${topSpot.county}）以 ${(topSpot.v/10000).toFixed(0)} 萬人次` +
+    `登頂景點排行，彰顯歷史文化街區對現代旅客的強大吸引力。`;
+
+  /* ── Build / rebuild charts ── */
+  buildCharts(county, monthly, spots, types, yearTrend, year, totV);
+
+  /* ── Build table ── */
+  buildTable(county, totV);
+}
+
+/* ══════════════════════════════════════
+   CHARTS
+══════════════════════════════════════ */
+function makeChart(id, config) {
+  if (chartInst[id]) { chartInst[id].destroy(); }
+  chartInst[id] = new Chart(document.getElementById(id), config);
+}
+
+function buildCharts(county, monthly, spots, types, yearTrend, latestYear, totV) {
+  const peakIdx = monthly.reduce((mi,d,i,a) => d.v > a[mi].v ? i : mi, 0);
+
+  /* Chart 1 — County */
+  makeChart('cCounty', {
+    type: 'bar',
+    data: {
+      labels: county.map(d => d.name),
+      datasets: [{
+        label: '遊客人次（萬）',
+        data: county.map(d => d.v / 10000),
+        backgroundColor: county.map((_,i) => {
+          const a = [.9,.82,.76,.72,.66,.62,.58,.52,.48,.44][i] || .4;
+          return `rgba(64,145,108,${a})`;
+        }),
+        borderRadius: 8, borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend:{display:false}, tooltip:{...tip,callbacks:{label:c=>` ${c.parsed.x.toFixed(1)} 萬人次`}} },
+      scales: { x:{grid:gridLine,ticks:{...tickStyle,callback:v=>v+'萬'}}, y:{grid:{display:false},ticks:tickStyle} },
+    }
+  });
+
+  /* Chart 2 — Monthly */
+  makeChart('cMonth', {
+    type: 'line',
+    data: {
+      labels: monthly.map(d => d.month),
+      datasets: [{
+        label: '遊客人次（萬）',
+        data: monthly.map(d => d.v / 10000),
+        borderColor: GOLD,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,280);
+          g.addColorStop(0,'rgba(201,162,39,.22)'); g.addColorStop(1,'rgba(201,162,39,0)');
+          return g;
+        },
+        borderWidth: 2.5,
+        pointBackgroundColor: monthly.map((_,i) => i===peakIdx ? TERRA : GOLD),
+        pointBorderColor: '#fff', pointBorderWidth: 1.5,
+        pointRadius: monthly.map((_,i) => i===peakIdx ? 8 : 4),
+        fill: true, tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false}, tooltip:{...tip,callbacks:{label:c=>` ${c.parsed.y.toFixed(1)} 萬人次`}} },
+      scales: { x:{grid:gridLine,ticks:tickStyle}, y:{grid:gridLine,ticks:{...tickStyle,callback:v=>v+'萬'}} },
+    }
+  });
+
+  /* Chart 3 — Spots */
+  makeChart('cSpots', {
+    type: 'bar',
+    data: {
+      labels: spots.map(d => d.name),
+      datasets: [{
+        label: '遊客人次（萬）',
+        data: spots.map(d => d.v / 10000),
+        backgroundColor: [GREEN,GOLD,TERRA,FERN,SAGE],
+        borderRadius: 8, borderSkipped: false, barThickness: 20,
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend:{display:false}, tooltip:{...tip,callbacks:{
+        title: items => `${spots[items[0].dataIndex].name}（${spots[items[0].dataIndex].county}）`,
+        label: c => ` ${c.parsed.x.toFixed(1)} 萬人次`,
+      }}},
+      scales: { x:{grid:gridLine,ticks:{...tickStyle,callback:v=>v+'萬'}}, y:{grid:{display:false},ticks:tickStyle} },
+    }
+  });
+
+  /* Chart 4 — Donut */
+  makeChart('cType', {
+    type: 'doughnut',
+    data: {
+      labels: types.map(d => d.type),
+      datasets: [{
+        data: types.map(d => d.v / 10000),
+        backgroundColor: palette,
+        borderWidth: 2, borderColor: '#fff', hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, cutout: '58%',
+      plugins: {
+        legend: { position:'right', labels:{color:'#6b7c6e',font:{size:10},padding:8,boxWidth:11} },
+        tooltip: { ...tip, callbacks:{ label: c => {
+          const tot = c.dataset.data.reduce((a,b)=>a+b,0);
+          return ` ${c.parsed.toFixed(0)} 萬（${((c.parsed/tot)*100).toFixed(1)}%）`;
+        }}},
+      }
+    }
+  });
+
+  /* Chart 5 — Year trend */
+  makeChart('cYear', {
+    type: 'line',
+    data: {
+      labels: yearTrend.map(d => d.year + ''),
+      datasets: [{
+        label: '全臺遊客（萬）',
+        data: yearTrend.map(d => d.v / 10000),
+        borderColor: GREEN,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+          g.addColorStop(0,'rgba(64,145,108,.18)'); g.addColorStop(1,'rgba(64,145,108,0)');
+          return g;
+        },
+        borderWidth: 2.5,
+        pointBackgroundColor: yearTrend.map(d => d.year===latestYear ? TERRA : GREEN),
+        pointBorderColor: '#fff', pointBorderWidth: 1.5,
+        pointRadius: yearTrend.map(d => d.year===latestYear ? 9 : 4),
+        fill: true, tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend:{display:false}, tooltip:{...tip,callbacks:{label:c=>` ${c.parsed.y.toLocaleString()} 萬人次`}} },
+      scales: {
+        x: { grid:gridLine, ticks:tickStyle },
+        y: { grid:gridLine, ticks:{...tickStyle,callback:v=>(v/10000).toFixed(1)+'億'} },
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   TABLE
+══════════════════════════════════════ */
+function buildTable(county, totV) {
+  const tbody = document.getElementById('tBody');
+  const maxV  = county[0].v;
+  tbody.innerHTML = '';
+  county.forEach((d, i) => {
+    const pct = ((d.v / totV) * 100).toFixed(1);
+    const bw  = Math.round((d.v / maxV) * 160);
+    const rc  = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    tbody.innerHTML += `
+    <tr>
+      <td><span class="rank-pill ${rc}">${i+1}</span></td>
+      <td><strong>${d.name}</strong></td>
+      <td>${d.v.toLocaleString('zh-TW')}</td>
+      <td><span style="color:var(--fern);font-weight:700">${pct}%</span></td>
+      <td>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${bw}px"></div>
+          <span style="font-size:.8rem;color:var(--muted)">${(d.v/10000).toFixed(1)} 萬</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+}
+
+/* ══════════════════════════════════════
+   PUBLIC: manual refresh button
+══════════════════════════════════════ */
+async function refreshData() {
+  clearCache();
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  const data = await loadData();
+  buildPage(data);
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+/* ══════════════════════════════════════
+   INTERACTIONS  (tilt, reveal)
+══════════════════════════════════════ */
+function initInteractions() {
+  /* Scroll reveal */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, {threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  /* 3D tilt — feat cards */
+  document.querySelectorAll('.feat-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r  = card.getBoundingClientRect();
+      const dx = (e.clientX - r.left - r.width/2)  / (r.width/2);
+      const dy = (e.clientY - r.top  - r.height/2) / (r.height/2);
+      card.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+      card.style.setProperty('--my', ((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+      card.style.transform = `perspective(900px) rotateX(${-dy*12}deg) rotateY(${dx*12}deg) scale3d(1.03,1.03,1.03)`;
+      card.style.boxShadow = `${-dx*14}px ${dy*14}px 40px rgba(26,77,46,.18),0 20px 60px rgba(26,77,46,.14)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(900px) rotateX(0) rotateY(0) scale3d(1,1,1)';
+      card.style.boxShadow = '';
+    });
+  });
+
+  /* 3D tilt — KPI cards (lighter) */
+  document.querySelectorAll('.kpi-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r  = card.getBoundingClientRect();
+      const dx = (e.clientX - r.left - r.width/2)  / (r.width/2);
+      const dy = (e.clientY - r.top  - r.height/2) / (r.height/2);
+      card.style.transform = `perspective(600px) rotateX(${-dy*6}deg) rotateY(${dx*6}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+(async () => {
+  const overlay = document.getElementById('loadingOverlay');
+  try {
+    const data = await loadData();
+    buildPage(data);
+  } catch(err) {
+    console.error(err);
+    buildPage(FALLBACK);
+    setStatus('error', '⚠ 發生錯誤，使用離線資料');
+  } finally {
+    overlay.classList.add('hidden');
+    initInteractions();
+  }
+})();
+</script>
+</body>
+</html>
