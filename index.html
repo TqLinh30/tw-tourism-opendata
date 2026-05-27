@@ -1007,13 +1007,19 @@ function clearCache() {
 /* ══════════════════════════════════════
    FETCH FROM NETLIFY FUNCTION
 ══════════════════════════════════════ */
+function isValidData(d) {
+  return d && Array.isArray(d.county) && d.county.length > 0
+    && Array.isArray(d.spots)   && d.spots.length   > 0
+    && Array.isArray(d.types)   && d.types.length   > 0
+    && Array.isArray(d.monthly) && d.monthly.length === 12;
+}
+
 async function fetchLiveData(bypassCdn = false) {
   const isNetlify = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
   if (!isNetlify) throw new Error('local-dev: skip fetch');
 
-  // Use AbortController for wider browser support
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15000);
+  const timer = setTimeout(() => ctrl.abort(), 8000);
 
   try {
     const opts = {
@@ -1056,6 +1062,7 @@ async function loadData() {
   try {
     const data = await fetchLiveData();
     clearInterval(dotTimer);
+    if (!isValidData(data)) throw new Error('invalid data shape');
     saveCache(data);
     const dt = new Date(data.updatedAt).toLocaleString('zh-TW');
     setStatus('', `✓ 最新資料已載入・資料年度：${data.year} 年・政府資料更新：${dt}`);
@@ -1066,7 +1073,7 @@ async function loadData() {
   }
 
   // 3. Fallback
-  setStatus('error', '⚠ 無法連線至資料來源，顯示內嵌離線資料（2024 年）');
+  setStatus('', '⚠ 使用內嵌離線資料（2024 年）・點擊重新整理以取得最新資料');
   return FALLBACK;
 }
 
@@ -1086,12 +1093,12 @@ function buildPage(d) {
   document.getElementById('hs-types').textContent    = types.length + ' 類型';
 
   /* ── KPI cards ── */
-  const topCounty = county[0];
+  const topCounty = county[0] || { name: '—', v: 0 };
   document.getElementById('kpi-county-val').textContent = topCounty.name;
   document.getElementById('kpi-county-sub').textContent =
     `${(topCounty.v/10000).toFixed(0)} 萬人次・全臺第 1`;
 
-  const topSpot = spots[0];
+  const topSpot = spots[0] || { name: '—', v: 0, county: '—' };
   document.getElementById('kpi-spot-val').innerHTML =
     topSpot.name.length > 8
       ? topSpot.name.replace(/(.{4,8})/, '$1<br>')
@@ -1103,7 +1110,7 @@ function buildPage(d) {
   document.getElementById('kpi-month-sub').textContent =
     `${(peakM.v/10000).toFixed(0)} 萬人次・春節效應`;
 
-  const topType = types[0];
+  const topType = types[0] || { type: '—', v: 0 };
   document.getElementById('kpi-type-val').textContent = topType.type;
   document.getElementById('kpi-type-sub').textContent =
     `${(topType.v/1e8).toFixed(2)} 億人次・佔比最高`;
@@ -1370,17 +1377,21 @@ function initInteractions() {
 ══════════════════════════════════════ */
 (async () => {
   const overlay = document.getElementById('loadingOverlay');
+  let data = FALLBACK;
   try {
-    const data = await loadData();
-    buildPage(data);
+    data = await loadData();
   } catch(err) {
-    console.error(err);
-    buildPage(FALLBACK);
+    console.error('[init] loadData error:', err);
     setStatus('error', '⚠ 發生錯誤，使用離線資料');
-  } finally {
-    overlay.classList.add('hidden');
-    initInteractions();
   }
+  try {
+    buildPage(data);
+  } catch(renderErr) {
+    console.error('[init] buildPage error:', renderErr);
+    try { buildPage(FALLBACK); } catch(_) {}
+  }
+  overlay.classList.add('hidden');
+  initInteractions();
 })();
 </script>
 </body>
