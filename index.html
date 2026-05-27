@@ -1029,7 +1029,7 @@ async function fetchLiveData(bypassCdn = false) {
     // bypassCdn=true only when we truly want fresh data (not on every refresh click)
     if (bypassCdn) opts.headers['Cache-Control'] = 'no-cache';
 
-    const res = await fetch('/.netlify/functions/tourism', opts);
+    const res = await fetch('/tourism', opts);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   } finally {
